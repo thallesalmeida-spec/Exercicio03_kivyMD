@@ -5,9 +5,9 @@ from kivymd.app import MDApp
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivy.core.window import Window
 
-from kivymd.uix.boxlayout import MDBoxLayout
+from kivy.uix.boxlayout import BoxLayout
 
-class MyWidget(MDBoxLayout):
+class MyWidget(BoxLayout):
     pass
 
 class BasicApp(MDApp):

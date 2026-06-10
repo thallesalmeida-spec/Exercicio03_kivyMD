@@ -1,147 +1,112 @@
+import os
+# Configuração para evitar problemas com OpenGL no Windows
+os.environ['KIVY_GL_BACKEND'] = 'angle_sdl2'
+
+from kivymd.app import MDApp
+from kivymd.uix.boxlayout import MDBoxLayout
+from kivy.clock import Clock
 from Cliente.clientemodbus import ClienteMODBUS
 
-class InterfaceUsuario:
+class MyWidget(MDBoxLayout):
     """
-    Classe para interação com o usuário.
+    Widget principal da interface gráfica.
+    Substitui a lógica de terminal da classe InterfaceUsuario.
     """
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._cliente = None
+        self._ev = None
 
-    def __init__(self, cliente_modbus):
+    def conectar(self):
         """
-        Construtor
+        Lógica para conectar ao servidor Modbus usando os campos IP e Porta.
         """
-        self._cliente = cliente_modbus
+        try:
+            host = self.ids.txt_ip_servidor.text
+            porta = int(self.ids.txt_porta.text)
+            self._cliente = ClienteMODBUS(host, porta)
+            if self._cliente.conectar():
+                self.ids.lbl_resultado.text = "Conectado com sucesso!"
+            else:
+                self.ids.lbl_resultado.text = "Falha na conexão."
+        except Exception as e:
+            self.ids.lbl_resultado.text = f"Erro na conexão: {e}"
 
-    def iniciar(self):
+    def ler(self):
         """
-        inicialização da interfaxew
+        Lógica para ler dados do servidor dependendo da checkbox ativa.
         """
-
-        self._cliente.conectar()
+        if not self._cliente:
+            self.ids.lbl_resultado.text = "Conecte ao servidor primeiro!"
+            return
 
         try:
-            while True:
-
-                self._mostrar_menu()
-
-                opcao = input("Escolha uma opção: ")
-                # switch em python? mudar dps
-                if opcao == '1':
-                    self._ler_registrador()
-
-                elif opcao == '2':
-                    self._escrever_registrador()
-
-                elif opcao == '3':
-                    self._escrever_float()
-
-                elif opcao == '4':
-                    self._ler_float()
-
-                elif opcao == '5':
-                    self._ler_bits()
-
-                elif opcao == '6':
-                    self._alterar_bit()
-
-                elif opcao == '0':
-                    print("Encerrando aplicação")
-                    break
-
-                else:
-                    print("Opção inválida")
-
+            endereco = int(self.ids.txt_endereco.text)
+            
+            if self.ids.chk_register.active:
+                valor = self._cliente.ler_holding_register(endereco)
+            elif self.ids.chk_float.active:
+                valor = self._cliente.ler_float(endereco)
+            elif self.ids.chk_bits.active:
+                valor = self._cliente.ler_bits_registrador(endereco)
+            elif self.ids.chk_coil.active:
+                valor = self._cliente.ler_coil(endereco)
+            else:
+                self.ids.lbl_resultado.text = "Selecione o tipo de dado."
+                return
+            
+            self.ids.lbl_resultado.text = f"Valor lido: {valor}"
         except Exception as e:
-            print(f"Erro: {e}")
+            self.ids.lbl_resultado.text = f"Erro na leitura: {e}"
 
-        finally:
-            self._cliente.desconectar()
+    def escrever(self):
+        """
+        Lógica para escrever dados no servidor dependendo da checkbox ativa.
+        """
+        if not self._cliente:
+            self.ids.lbl_resultado.text = "Conecte ao servidor primeiro!"
+            return
 
-    def _mostrar_menu(self):
+        try:
+            endereco = int(self.ids.txt_endereco.text)
+            valor_str = self.ids.txt_valor.text
+            
+            ok = False
+            if self.ids.chk_register.active:
+                ok = self._cliente.escrever_holding_register(endereco, int(valor_str))
+            elif self.ids.chk_float.active:
+                ok = self._cliente.escrever_float(endereco, float(valor_str))
+            elif self.ids.chk_bits.active:
+                bit = int(self.ids.txt_bit.text)
+                ok = self._cliente.escrever_bit_individual(endereco, bit, int(valor_str))
+            elif self.ids.chk_coil.active:
+                ok = self._cliente.escrever_coil(endereco, int(valor_str))
+            else:
+                self.ids.lbl_resultado.text = "Selecione o tipo de dado."
+                return
+            
+            if ok:
+                self.ids.lbl_resultado.text = "Escrita realizada com sucesso!"
+            else:
+                self.ids.lbl_resultado.text = "Falha na escrita."
+        except Exception as e:
+            self.ids.lbl_resultado.text = f"Erro na escrita: {e}"
 
-        print("\n==============================")
-        print("      CLIENTE MODBUS TCP")
-        print("==============================")
-        print("1 - Ler Holding Register")
-        print("2 - Escrever Holding Register")
-        print("3 - Escrever Float")
-        print("4 - Ler Float")
-        print("5 - Ler Bits de Registrador")
-        print("6 - Alterar Bit Individual")
-        print("0 - Sair")
-        print("==============================")
-
-    def _ler_registrador(self):
-        endereco = int(input("Endereço do registrador: "))
-        valor = self._cliente.ler_holding_register(endereco)
-        print(f"Valor lido: {valor}")
-
-    def _escrever_registrador(self):
-        endereco = int(input("Endereço do registrador: "))
-        valor = int(input("Valor inteiro: "))
-        ok = self._cliente.escrever_holding_register(endereco,valor)
-
-        if ok:
-            print("Escrita realizada.")
+    def toggle_recorrente(self, active):
+        """
+        Ativa ou desativa a leitura recorrente usando Clock.
+        """
+        if active:
+            self._ev = Clock.schedule_interval(lambda dt: self.ler(), 1)
         else:
-            print("Falha na escrita.")
+            if self._ev:
+                self._ev.cancel()
 
-    def _escrever_float(self):
-        endereco = int(
-            input("Endereço inicial dos 2 registradores: ")
-        )
-        valor = float(
-            input("Valor float: ")
-        )
-        ok = self._cliente.escrever_float(endereco,valor)
-
-        if ok:
-            print("Float escrito com sucesso.")
-        else:
-            print("Erro ao escrever.")
-
-    def _ler_float(self):
-
-        endereco = int(input("Endereço inicial dos 2 registradores: "))
-        valor = self._cliente.ler_float(endereco)
-        print(f"Float lido: {valor}")
-
-    def _ler_bits(self):
-        endereco = int(input("Endereço do registrador: "))
-        bits = self._cliente.ler_bits_registrador(endereco)
-        print("\nEstado dos bits:")
-
-        for i, bit in enumerate(bits):
-
-            print(
-                f"Bit {15-i}: {bit}"
-            )
-
-    def _alterar_bit(self):
-        endereco = int(
-            input("Endereço do registrador: ")
-        )
-        bit = int(
-            input("Número do bit [0-15]: ")
-        )
-        valor = int(
-            input("Novo estado (0 ou 1): ")
-        )
-        ok = self._cliente.escrever_bit_individual(endereco,bit,valor)
-        if ok:
-            print("Bit alterado com sucesso.")
-        else:
-            print("Falha na alteração.")
-
+class BasicApp(MDApp):
+    def build(self):
+        self.theme_cls.theme_style = "Light"
+        self.theme_cls.primary_palette = "Blue"
+        return MyWidget()
 
 if __name__ == '__main__':
-
-    cliente = ClienteMODBUS(
-        'localhost',
-        502
-    )
-
-    interface = InterfaceUsuario(
-        cliente
-    )
-
-    interface.iniciar()
+    BasicApp().run()

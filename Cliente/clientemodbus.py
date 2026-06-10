@@ -88,3 +88,19 @@ class ClienteMODBUS():
         else:
             novo_valor = (valor_atual & ~(1 << numero_bit))
         return self.escrever_holding_register(endereco, novo_valor)
+
+    def ler_coil(self, endereco):
+        """
+        Lê o estado de um Coil.
+        """
+        resposta = self._cliente.read_coils(address=endereco, count=1, device_id=self._device_id)
+        if resposta.isError():
+            return None
+        return resposta.bits[0]
+
+    def escrever_coil(self, endereco, valor):
+        """
+        Escreve em um Coil.
+        """
+        resposta = self._cliente.write_coil(address=endereco, value=valor, device_id=self._device_id)
+        return not resposta.isError()

@@ -1,5 +1,6 @@
 <MyWidget>:
     orientation: "vertical"
+
     MDBoxLayout:
         id: bxI
         orientation: "horizontal"
@@ -9,17 +10,9 @@
             text: "IP do Servidor"
 
         MDTextField:
+            id: txt_ip_servidor
             text: "127.0.0.1"
-    MDBoxLayout:
-        id: bxII
-        orientation: "horizontal"
-        size_hint_y: 0.2
 
-        MDLabel:
-            text: "IP do Cliente"
-
-        MDTextField:
-            text: "127.0.0.1"
     MDBoxLayout:
         id: bxIII
         orientation: "horizontal"
@@ -29,31 +22,61 @@
             text: "Porta"
 
         MDTextField:
+            id: txt_porta
             text: "502"
+
     MDBoxLayout:
-        id: bxVI
-        size_hint_y: 0.2
+        id: bxEndereco
         orientation: "horizontal"
+        size_hint_y: 0.2
 
         MDLabel:
-            text: "Box 1"
-            size_hint_y: 0.2
-            pos_hint: {'center_y':0.2}
+            text: "Endereço"
+
+        MDTextField:
+            id: txt_endereco
+
+    MDBoxLayout:
+        id: bxValor
+        orientation: "horizontal"
+        size_hint_y: 0.2
+
         MDLabel:
-            text: "Box 2"
-            pos_hint: {'center_y':0.2}
+            text: "Valor"
+
+        MDTextField:
+            id: txt_valor
+
+    MDBoxLayout:
+        id: bxBit
+        orientation: "horizontal"
+        size_hint_y: 0.2
+
         MDLabel:
-            text: "Box 3"
-            pos_hint: {'center_y':0.2}
+            text: "Bit"
+
+        MDTextField:
+            id: txt_bit
+
+    MDBoxLayout:
+        id: bxVI
+        orientation: "horizontal"
+        size_hint_y: 0.2
+
         MDLabel:
-            text: "Box 4"
-            pos_hint: {'center_y':0.2}
+            text: "Register"
+
         MDLabel:
-            text: "Box 5"
-            pos_hint: {'center_x':0.2}
+            text: "Float"
+
         MDLabel:
-            text: "Box 6"
-            pos_hint: {'center_y':0.2}
+            text: "Bits"
+
+        MDLabel:
+            text: "Coil"
+
+        MDLabel:
+            text: "Recorrente"
 
     MDBoxLayout:
         id: bxIV
@@ -61,16 +84,25 @@
         size_hint_y: 0.2
 
         MDCheckbox:
+            id: chk_register
+            group: "tipo"
+            active: True
 
         MDCheckbox:
+            id: chk_float
+            group: "tipo"
 
         MDCheckbox:
+            id: chk_bits
+            group: "tipo"
 
         MDCheckbox:
+            id: chk_coil
+            group: "tipo"
 
         MDCheckbox:
-
-        MDCheckbox:
+            id: chk_recorrente
+            on_active: root.toggle_recorrente(self.active)
 
     MDBoxLayout:
         id: bxV
@@ -78,10 +110,21 @@
         size_hint_y: 0.2
 
         MDRaisedButton:
+            text: "Conectar"
+            on_release: root.conectar()
+
+        MDRaisedButton:
             text: "Ler"
+            on_release: root.ler()
 
         MDRaisedButton:
             text: "Escrever"
+            on_release: root.escrever()
+
+    MDBoxLayout:
+        orientation: "horizontal"
+        size_hint_y: 0.2
+
         MDLabel:
-            text: "Valor aqui"
-            size_hint_y: (0.2)
+            id: lbl_resultado
+            text: "Resultado"
