@@ -35,10 +35,10 @@ python Servidor/servidormodbus.py
 
 ### 3. Executar o Cliente (Interface Gráfica)
 
-Em outro terminal, execute a interface gráfica:
+Em outro terminal, execute a interface gráfica. Na raiz do projeto execute:
 
 ```bash
-python Cliente/interface_usuario.py
+python -m Cliente.interface_usuario
 ```
 
 ## Funcionalidades da Interface
